@@ -1,53 +1,44 @@
-﻿namespace MarkovTextGenerator;
+﻿using System;
+using System.Collections.Generic;
 
-public class Program
+namespace MarkovTextGenerator
 {
-    static void Main(string[] args)
+    public class Chain
     {
-        Chain chain = new Chain();
+        Dictionary<string, List<string>> words = new Dictionary<string, List<string>>();
+        Random rng = new Random();
 
-        Console.WriteLine("Welcome to Marky Markov's Random Text Generator!");
-
-        Console.WriteLine("Enter some text I can learn from (enter single ! to finish): ");
-
-        // LoadText("Sample.txt", chain);
-
-        while (true)
+        public void AddSentence(string line)
         {
+            if (string.IsNullOrWhiteSpace(line)) return;
 
-            Console.Write("> ");
+            string[] split = line.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            var line = Console.ReadLine();
-            if (line == "!")
-                break;
-
-            chain.AddSentence(line);  // Let the chain process this string
+            for (int i = 0; i < split.Length - 1; i++)
+            {
+                if (!words.ContainsKey(split[i]))
+                {
+                    words[split[i]] = new List<string>();
+                }
+                words[split[i]].Add(split[i + 1]);
+            }
         }
 
-        // Now let's update all the probabilities with the new data
-        chain.UpdateProbabilities();
-
-        // Okay now for the fun part
-        Console.WriteLine("Done learning!  Now give me a word and I'll tell you what comes next.");
-        Console.Write("> ");
-
-        var word = Console.ReadLine() ?? string.Empty;
-        var nextWord = chain.GetNextWord(word);
-        Console.WriteLine("I predict the next word will be " + nextWord);
-    }
-
-    static void LoadText(string filename, Chain chain)
-    {
-        int counter = 0;
-
-        string path = Path.Combine(Environment.CurrentDirectory, $"data\\{filename}");
-
-        var lines = File.ReadAllLines(path);
-        foreach (var line in lines)
+        public void UpdateProbabilities()
         {
-            chain.AddSentence(line);
-            counter++;
+        }
+
+        public string GetNextWord(string word)
+        {
+            string key = word.ToLower().Trim();
+
+            if (words.ContainsKey(key))
+            {
+                List<string> options = words[key];
+                return options[rng.Next(options.Count)];
+            }
+
+            return "something I haven't learned yet";
         }
     }
 }
-
